@@ -64,18 +64,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd /
-            mkdir -p /opt/lemp/db/init/
-
-      - name: Set permissions for /opt/lemp/db/init/
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            sudo chown -R $(whoami) /opt/lemp/db/init/
+            sudo mkdir -p /opt/lemp/db/init/
+            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/lemp
             sudo chmod -R u+w /opt/lemp/db/init/
 
       - name: Copy init.sql to VM
