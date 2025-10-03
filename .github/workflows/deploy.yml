@@ -108,12 +108,18 @@ jobs:
             set -e
             cd /opt/lemp
             
+            export MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DB_USER=${{ secrets.DB_USER }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DB_NAME=${{ secrets.DB_NAME }}
+
             if [ ! -d "/var/lib/docker/volumes/lemp_db_data" ]; then
-              docker compose -f docker-compose.prod.yml down -v
+              sudo -E docker compose -f docker-compose.prod.yml down -v
             else
-              docker compose -f docker-compose.prod.yml down
+              sudo -E docker compose -f docker-compose.prod.yml down
             fi
             
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-            docker compose -f docker-compose.prod.yml ps
+            sudo -E docker compose -f docker-compose.prod.yml pull
+            sudo -E docker compose -f docker-compose.prod.yml up -d
+            sudo -E docker compose -f docker-compose.prod.yml ps
