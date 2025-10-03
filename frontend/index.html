@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List</title>
+    <style>
+        :root {
+            --bg: #0b0b0c;
+            --panel: #121214;
+            --text: #fafafa;
+            --muted: #9ca3af;
+            --border: #1f1f22;
+            --yellow: #fbbf24;
+            --yellow-500: #f59e0b;
+            --ring: rgba(245, 158, 11, 0.35);
+        }
+
+        * { box-sizing: border-box }
+
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            background:
+                    radial-gradient(700px 400px at 20% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+                    radial-gradient(600px 300px at 100% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
+                    var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            font-size: 28px;
+            letter-spacing: -0.02em;
+        }
+
+        .creator {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #0e0e10;
+            color: var(--text);
+            font-size: 16px;
+            transition: box-shadow 160ms ease, border-color 160ms ease, transform 120ms ease;
+        }
+
+        input[type="text"]::placeholder { color: #737373 }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--yellow);
+            box-shadow: 0 0 0 4px var(--ring);
+            transform: translateY(-1px);
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--yellow), var(--yellow-500));
+            color: #1a1a1a;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            transition: transform 120ms ease, filter 160ms ease;
+        }
+        button:hover { transform: translateY(-1px); filter: brightness(1.05) }
+        button:active { transform: translateY(0) }
+
+        #plans-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .plan {
+            background: #141416;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            transition: transform 160ms ease, border-color 160ms ease;
+        }
+        .plan:hover { transform: translateY(-2px); border-color: #26262b }
+
+        .plan h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            letter-spacing: -0.01em;
+        }
+
+        .plan .add-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #0f0f11;
+            transition: border-color 120ms ease, background 120ms ease;
+        }
+        .task:hover { border-color: #26262b; background: #121214 }
+
+        .checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--yellow);
+            border-radius: 6px;
+            background: transparent;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: border-color 160ms ease, background 160ms ease;
+        }
+        .checkbox:checked { background: var(--yellow) }
+        .checkbox:checked::after {
+            content: "";
+            width: 8px; height: 8px;
+            background: #1a1a1a;
+            border-radius: 2px;
+        }
+
+        .task-title { font-size: 15px }
+        .task.completed .task-title { text-decoration: line-through; color: var(--muted) }
+
+        .actions { display: flex; gap: 8px }
+        .muted { color: var(--muted) }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>My Shopping Lists</h1>
+
+    <div class="creator">
+        <input type="text" id="new-plan-name" placeholder="New shopping plan name">
+        <button onclick="createPlan()">Create Plan</button>
+    </div>
+
+    <div id="plans-container"></div>
+</div>
+
+<script>
+    function fetchPlans() {
+        fetch('/api/plans')
+            .then(response => response.json())
+            .then(data => {
+                const plansContainer = document.getElementById('plans-container');
+                plansContainer.innerHTML = '';
+                data.plans.forEach(plan => {
+                    const planElement = document.createElement('div');
+                    planElement.className = 'plan';
+                    planElement.innerHTML = `
+                            <h2>${plan.name}</h2>
+                            <div class="add-row">
+                                <input type="text" id="new-task-title-${plan.id}" placeholder="Add a new item">
+                                <button onclick="createTask(${plan.id})">Add Item</button>
+                            </div>
+                            <div class="tasks" id="tasks-for-plan-${plan.id}"></div>
+                        `;
+                    plansContainer.appendChild(planElement);
+                    fetchTasks(plan.id);
+                });
+            });
+    }
+
+    function fetchTasks(planId) {
+        fetch(`/api/plans/${planId}/tasks`)
+            .then(response => response.json())
+            .then(data => {
+                const tasksContainer = document.getElementById(`tasks-for-plan-${planId}`);
+                tasksContainer.innerHTML = '';
+                data.tasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task' + (task.completed ? ' completed' : '');
+                    taskElement.innerHTML = `
+                            <input class="checkbox" type="checkbox" onchange="toggleTask(${task.id}, this.checked, ${planId})" ${task.completed ? 'checked' : ''}>
+                            <span class="task-title">${task.title}</span>
+                            <div class="actions"></div>
+                        `;
+                    tasksContainer.appendChild(taskElement);
+                });
+            });
+    }
+
+    function createPlan() {
+        const planName = document.getElementById('new-plan-name').value.trim();
+        if (!planName) return;
+        fetch('/api/plans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: planName })
+        }).then(() => {
+            document.getElementById('new-plan-name').value = '';
+            fetchPlans();
+        });
+    }
+
+    function createTask(planId) {
+        const input = document.getElementById(`new-task-title-${planId}`);
+        const taskTitle = input.value.trim();
+        if (!taskTitle) return;
+        fetch(`/api/plans/${planId}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: taskTitle })
+        }).then(() => {
+            input.value = '';
+            fetchTasks(planId);
+        });
+    }
+
+    function toggleTask(taskId, completed, planId) {
+        fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: completed })
+        }).then(() => {
+            fetchTasks(planId);
+        });
+    }
+
+    window.onload = fetchPlans;
+</script>
+</body>
+</html>
